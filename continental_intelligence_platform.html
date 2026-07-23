@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Continental Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0A1220;
+    --panel:#111B2E;
+    --panel-2:#0D1626;
+    --border:#1E2A42;
+    --text:#E7ECF5;
+    --muted:#7E8CA6;
+    --amber:#F0A857;
+    --cyan:#4FB3BF;
+    --pos:#5FBF8F;
+    --neg:#E2665D;
+    --mono:'IBM Plex Mono', monospace;
+    --disp:'Space Grotesk', sans-serif;
+    --body:'Inter', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(ellipse at top, #0F1B30 0%, var(--ink) 55%);
+    color:var(--text);
+    font-family:var(--body);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  a{color:inherit;}
+
+  /* ===== Top bar / signature sweep ===== */
+  .topbar{
+    position:relative;
+    border-bottom:1px solid var(--border);
+    background:var(--panel-2);
+    overflow:hidden;
+  }
+  .sweep{
+    position:absolute; top:0; left:-30%; width:30%; height:100%;
+    background:linear-gradient(90deg, transparent, rgba(240,168,87,0.10), transparent);
+    animation:sweep 6s linear infinite;
+    pointer-events:none;
+  }
+  @keyframes sweep{
+    0%{left:-30%;}
+    100%{left:100%;}
+  }
+  .topbar-inner{
+    position:relative; z-index:1;
+    display:flex; align-items:center; gap:18px;
+    padding:12px 22px; flex-wrap:wrap;
+  }
+  .brand{
+    font-family:var(--disp); font-weight:700; font-size:17px; letter-spacing:0.3px;
+    display:flex; align-items:center; gap:9px;
+  }
+  .brand .dot{
+    width:8px; height:8px; border-radius:50%; background:var(--amber);
+    box-shadow:0 0 0 3px rgba(240,168,87,0.18);
+    animation:pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:0.35;}
+  }
+  .brand small{
+    font-family:var(--mono); font-weight:400; font-size:10px; color:var(--muted);
+    letter-spacing:1.5px; text-transform:uppercase; margin-left:4px;
+  }
+  .ticker-wrap{
+    flex:1; min-width:260px; overflow:hidden; font-family:var(--mono); font-size:12px; color:var(--muted);
+    white-space:nowrap; position:relative;
+    mask-image:linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+  .ticker{display:inline-block; padding-left:100%; animation:tick 28s linear infinite;}
+  .ticker span{margin-right:36px;}
+  .ticker .up{color:var(--pos);}
+  .ticker .down{color:var(--neg);}
+  @keyframes tick{ 0%{transform:translateX(0);} 100%{transform:translateX(-100%);} }
+  .clock{font-family:var(--mono); font-size:12px; color:var(--muted); white-space:nowrap;}
+  .status{
+    font-family:var(--mono); font-size:11px; padding:4px 9px; border-radius:3px;
+    border:1px solid var(--border); color:var(--muted); white-space:nowrap;
+  }
+  .status.ok{color:var(--pos); border-color:rgba(95,191,143,0.3);}
+  .status.err{color:var(--neg); border-color:rgba(226,102,93,0.3);}
+
+  /* ===== Layout ===== */
+  .layout{
+    display:grid;
+    grid-template-columns:230px 1fr;
+    gap:0;
+    min-height:calc(100vh - 52px);
+  }
+  @media (max-width:880px){
+    .layout{grid-template-columns:1fr;}
+    .rail{border-right:none; border-bottom:1px solid var(--border);}
+  }
+
+  /* ===== Rail (continent/country) ===== */
+  .rail{
+    border-right:1px solid var(--border);
+    background:var(--panel-2);
+    padding:20px 16px;
+  }
+  .rail h4{
+    font-family:var(--mono); font-size:10px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; margin-top:22px;
+  }
+  .rail h4:first-child{margin-top:0;}
+  .continent-list{display:flex; flex-direction:column; gap:4px;}
+  .continent-btn{
+    text-align:left; background:none; border:1px solid transparent; color:var(--muted);
+    font-family:var(--body); font-size:13px; font-weight:500; padding:8px 10px; border-radius:6px;
+    cursor:pointer; transition:all .15s;
+  }
+  .continent-btn:hover{background:rgba(240,168,87,0.06); color:var(--text);}
+  .continent-btn.active{
+    background:rgba(240,168,87,0.10); color:var(--amber); border-color:rgba(240,168,87,0.25);
+  }
+  .country-list{display:flex; flex-direction:column; gap:2px; max-height:340px; overflow-y:auto;}
+  .country-item{
+    display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:5px; cursor:pointer;
+    font-size:12.5px; color:var(--muted); transition:background .12s;
+  }
+  .country-item:hover{background:rgba(255,255,255,0.03);}
+  .country-item input{accent-color:var(--amber); cursor:pointer;}
+  .country-item.focus-country{color:var(--text); font-weight:600;}
+  .country-item.focus-country::after{
+    content:'FOCUS'; margin-left:auto; font-family:var(--mono); font-size:8px; color:var(--amber);
+    border:1px solid rgba(240,168,87,0.4); padding:1px 4px; border-radius:3px;
+  }
+  .rail-note{font-size:11px; color:var(--muted); line-height:1.5; margin-top:18px; padding-top:14px; border-top:1px solid var(--border);}
+
+  /* ===== Main ===== */
+  .main{padding:22px 26px 40px;}
+  .section-title{
+    font-family:var(--disp); font-weight:600; font-size:13px; color:var(--muted);
+    text-transform:uppercase; letter-spacing:1.3px; margin-bottom:14px; display:flex; align-items:center; gap:10px;
+  }
+  .section-title .line{flex:1; height:1px; background:var(--border);}
+
+  /* KPI strip */
+  .kpi-grid{
+    display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; margin-bottom:32px;
+  }
+  @media (max-width:1100px){ .kpi-grid{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:600px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+  .kpi{
+    background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+    position:relative; overflow:hidden;
+  }
+  .kpi::before{
+    content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--amber); opacity:.7;
+  }
+  .kpi .label{font-family:var(--mono); font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1px;}
+  .kpi .value{font-family:var(--disp); font-size:22px; font-weight:700; margin-top:6px; color:var(--text);}
+  .kpi .delta{font-family:var(--mono); font-size:11px; margin-top:4px;}
+  .kpi .delta.up{color:var(--pos);}
+  .kpi .delta.down{color:var(--neg);}
+  .kpi .delta.flat{color:var(--muted);}
+
+  /* Tabs */
+  .tabs{display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap;}
+  .tab-btn{
+    font-family:var(--body); font-size:13px; font-weight:600; color:var(--muted);
+    background:var(--panel); border:1px solid var(--border); padding:8px 16px; border-radius:7px;
+    cursor:pointer; transition:all .15s;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{
+    color:var(--ink); background:var(--amber); border-color:var(--amber);
+  }
+
+  .panel-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:18px;}
+  @media (max-width:980px){ .panel-grid{grid-template-columns:1fr;} }
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px;
+  }
+  .card h3{font-family:var(--disp); font-size:14px; font-weight:600; margin-bottom:2px;}
+  .card .sub{font-size:11.5px; color:var(--muted); margin-bottom:14px;}
+  canvas{max-width:100%;}
+
+  .rank-list{display:flex; flex-direction:column; gap:8px;}
+  .rank-row{
+    display:flex; align-items:center; gap:10px; font-size:12.5px;
+  }
+  .rank-row .country{width:88px; color:var(--text); font-weight:500; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .rank-bar-track{flex:1; height:8px; background:var(--panel-2); border-radius:4px; overflow:hidden;}
+  .rank-bar-fill{height:100%; background:linear-gradient(90deg, var(--cyan), var(--amber)); border-radius:4px;}
+  .rank-val{font-family:var(--mono); font-size:11.5px; color:var(--muted); width:70px; text-align:right; flex-shrink:0;}
+
+  .loading{
+    display:flex; align-items:center; justify-content:center; height:220px; color:var(--muted);
+    font-family:var(--mono); font-size:12px;
+  }
+  .footer-note{
+    margin-top:26px; font-size:11px; color:var(--muted); text-align:center; line-height:1.6;
+  }
+  ::-webkit-scrollbar{width:6px; height:6px;}
+  ::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="sweep"></div>
+  <div class="topbar-inner">
+    <div class="brand"><span class="dot"></span>CIP <small>Continental Intelligence Platform</small></div>
+    <div class="ticker-wrap"><div class="ticker" id="ticker">Loading live indicators…</div></div>
+    <div class="status ok" id="apiStatus">● World Bank API</div>
+    <div class="status ok" id="whoStatus">● WHO GHO API</div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="rail">
+    <h4>Continent</h4>
+    <div class="continent-list" id="continentList"></div>
+
+    <h4>Countries <span style="opacity:.6">(compare)</span></h4>
+    <div class="country-list" id="countryList"></div>
+
+    <div class="rail-note">
+      Focus country drives the KPI strip. Checked countries drive the comparison charts. Data: World Bank Open Data — 20,000+ indicators, 217 economies, no key required.
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="section-title"><span id="focusHeading">Executive Command Center — Ghana</span><span class="line"></span></div>
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="loading">Fetching latest indicators…</div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="economic">Economic Intelligence</button>
+      <button class="tab-btn" data-tab="human">Human Development</button>
+      <button class="tab-btn" data-tab="health">Health Intelligence <span style="opacity:.55">· WHO</span></button>
+      <button class="tab-btn" data-tab="environment">Environment &amp; Digital</button>
+      <button class="tab-btn" data-tab="governance">Governance &amp; SDGs</button>
+    </div>
+    <div style="font-size:11px; color:var(--muted); margin:-10px 0 18px; font-family:var(--mono)" id="sourceNote"></div>
+
+    <div id="tabContent"></div>
+
+    <div class="footer-note">
+      Live data fetched client-side from api.worldbank.org · World Development Indicators · Values marked N/A where the most recent series year has not yet been reported.<br>
+      Prototype scope: Phase 1 MVP (continent→country drill-down, core KPIs, benchmarking). Forecasting, alerts, and AI briefings are Phase 2/3 — see Read Me.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Data model ---------------- */
+const CONTINENTS = {
+  Africa: [
+    ["GHA","Ghana"], ["NGA","Nigeria"], ["KEN","Kenya"], ["ZAF","South Africa"],
+    ["EGY","Egypt"], ["ETH","Ethiopia"], ["CIV","Côte d'Ivoire"], ["MAR","Morocco"]
+  ],
+  Europe: [
+    ["DEU","Germany"], ["GBR","United Kingdom"], ["FRA","France"], ["POL","Poland"],
+    ["ESP","Spain"], ["ITA","Italy"], ["SWE","Sweden"], ["NLD","Netherlands"]
+  ],
+  Asia: [
+    ["CHN","China"], ["IND","India"], ["JPN","Japan"], ["VNM","Vietnam"],
+    ["IDN","Indonesia"], ["KOR","South Korea"], ["SAU","Saudi Arabia"], ["PAK","Pakistan"]
+  ],
+  Americas: [
+    ["USA","United States"], ["BRA","Brazil"], ["MEX","Mexico"], ["CAN","Canada"],
+    ["ARG","Argentina"], ["COL","Colombia"], ["CHL","Chile"], ["PER","Peru"]
+  ],
+  Oceania: [
+    ["AUS","Australia"], ["NZL","New Zealand"], ["PNG","Papua New Guinea"], ["FJI","Fiji"]
+  ]
+};
+
+const INDICATORS = {
+  gdpPerCapita: {code:"NY.GDP.PCAP.CD", label:"GDP per capita", unit:"US$", kpi:true, source:"wb", fmt:v=>fmtMoney(v)},
+  gdpGrowth:    {code:"NY.GDP.MKTP.KD.ZG", label:"GDP growth", unit:"% / yr", kpi:true, source:"wb", fmt:v=>fmtPct(v)},
+  inflation:    {code:"FP.CPI.TOTL.ZG", label:"Inflation (CPI)", unit:"% / yr", kpi:true, source:"wb", fmt:v=>fmtPct(v)},
+  population:   {code:"SP.POP.TOTL", label:"Population", unit:"people", kpi:true, source:"wb", fmt:v=>fmtInt(v)},
+  lifeExp:      {code:"SP.DYN.LE00.IN", label:"Life expectancy", unit:"years", kpi:true, source:"wb", fmt:v=>v.toFixed(1)+" yrs"},
+  unemployment: {code:"SL.UEM.TOTL.ZS", label:"Unemployment", unit:"% of labor force", kpi:true, source:"wb", fmt:v=>fmtPct(v)},
+  internet:     {code:"IT.NET.USER.ZS", label:"Internet users", unit:"% of population", group:"environment", source:"wb", fmt:v=>fmtPct(v)},
+  co2:          {code:"EN.GHG.CO2.PC.CE.AR5", label:"CO2 emissions per capita", unit:"tCO2e", group:"environment", source:"wb", fmt:v=>v.toFixed(2)+" t"},
+  secEnroll:    {code:"SE.SEC.NENR", label:"Secondary school enrollment", unit:"% net", group:"human", source:"wb", fmt:v=>fmtPct(v)},
+  matMortality: {code:"SH.STA.MMRT", label:"Maternal mortality ratio", unit:"per 100k births", group:"human", source:"wb", fmt:v=>fmtInt(v)},
+
+  /* Governance & SDG proxies — World Bank Worldwide Governance Indicators + SDG series */
+  ruleOfLaw:        {code:"RL.EST", label:"Rule of Law (WGI)", unit:"score, -2.5 to 2.5", group:"governance", source:"wb", fmt:v=>v.toFixed(2)},
+  govEffectiveness: {code:"GE.EST", label:"Government Effectiveness (WGI)", unit:"score, -2.5 to 2.5", group:"governance", source:"wb", fmt:v=>v.toFixed(2)},
+  politicalStability:{code:"PV.EST", label:"Political Stability (WGI)", unit:"score, -2.5 to 2.5", group:"governance", source:"wb", fmt:v=>v.toFixed(2)},
+  corruption:       {code:"CC.EST", label:"Control of Corruption (WGI)", unit:"score, -2.5 to 2.5", group:"governance", source:"wb", fmt:v=>v.toFixed(2)},
+  povertyRate:      {code:"SI.POV.DDAY", label:"Poverty rate (SDG 1)", unit:"% below $2.15/day", group:"governance", source:"wb", fmt:v=>fmtPct(v)},
+  electricityAccess:{code:"EG.ELC.ACCS.ZS", label:"Electricity access (SDG 7)", unit:"% of population", group:"governance", source:"wb", fmt:v=>fmtPct(v)},
+
+  /* Health Intelligence — WHO Global Health Observatory (second live data source) */
+  whoLifeExp:      {code:"WHOSIS_000001", label:"Life expectancy (WHO)", unit:"years", group:"health", source:"who", fmt:v=>v.toFixed(1)+" yrs"},
+  under5Mortality: {code:"MDG_0000000007", label:"Under-5 mortality (WHO)", unit:"per 1,000 live births", group:"health", source:"who", fmt:v=>v.toFixed(1)},
+  immunization:    {code:"WHS4_100", label:"Measles immunization (WHO)", unit:"% of 1-year-olds", group:"health", source:"who", fmt:v=>fmtPct(v)},
+};
+
+const ECON_KEYS = ["gdpPerCapita","gdpGrowth","inflation","unemployment"];
+const HUMAN_KEYS = ["lifeExp","secEnroll","matMortality","population"];
+const HEALTH_KEYS = ["whoLifeExp","under5Mortality","immunization"];
+const ENV_KEYS = ["internet","co2"];
+const GOV_KEYS = ["ruleOfLaw","govEffectiveness","politicalStability","corruption","povertyRate","electricityAccess"];
+
+INDICATORS.gdpPerCapita.source = "wb";
+INDICATORS.gdpGrowth.source = "wb";
+INDICATORS.inflation.source = "wb";
+INDICATORS.population.source = "wb";
+INDICATORS.lifeExp.source = "wb";
+INDICATORS.unemployment.source = "wb";
+
+let state = {
+  continent: "Africa",
+  focus: "GHA",
+  compare: new Set(["GHA","NGA","KEN","ZAF"]),
+  cache: {},
+  activeTab: "economic",
+};
+
+function fmtMoney(v){ return "$"+Math.round(v).toLocaleString(); }
+function fmtPct(v){ return v.toFixed(1)+"%"; }
+function fmtInt(v){
+  if(v>=1e9) return (v/1e9).toFixed(2)+"B";
+  if(v>=1e6) return (v/1e6).toFixed(2)+"M";
+  if(v>=1e3) return (v/1e3).toFixed(1)+"K";
+  return Math.round(v).toLocaleString();
+}
+
+/* ---------------- Fetch helpers ---------------- */
+const WB_BASE = "https://api.worldbank.org/v2";
+
+async function wbFetch(path, params){
+  const url = new URL(WB_BASE+path);
+  url.searchParams.set("format","json");
+  Object.entries(params||{}).forEach(([k,v])=>url.searchParams.set(k,v));
+  const res = await fetch(url.toString());
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const body = await res.json();
+  if(!Array.isArray(body) || body.length<2) return [];
+  return body[1] || [];
+}
+
+async function wbLatest(iso3, code){
+  try{
+    const rows = await wbFetch(`/country/${iso3}/indicator/${code}`, {mrnev:1});
+    if(rows.length===0) return null;
+    return {value: rows[0].value, date: rows[0].date};
+  }catch(e){ return null; }
+}
+
+async function wbSeries(iso3, code, fromYear, toYear){
+  try{
+    const rows = await wbFetch(`/country/${iso3}/indicator/${code}`, {date:`${fromYear}:${toYear}`, per_page:200});
+    return rows.filter(r=>r.value!==null).map(r=>({year:+r.date, value:r.value})).sort((a,b)=>a.year-b.year);
+  }catch(e){ return []; }
+}
+
+/* --- WHO Global Health Observatory (OData) — second live data source --- */
+const WHO_BASE = "https://ghoapi.azureedge.net/api";
+let whoOK = true;
+
+async function whoRows(iso3, code){
+  try{
+    const url = `${WHO_BASE}/${code}?$filter=SpatialDim eq '${iso3}'`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const body = await res.json();
+    whoOK = true;
+    return (body.value||[]).filter(r=>r.NumericValue!==null && r.NumericValue!==undefined);
+  }catch(e){ whoOK = false; return []; }
+}
+
+async function whoLatest(iso3, code){
+  const rows = await whoRows(iso3, code);
+  if(rows.length===0) return null;
+  rows.sort((a,b)=>b.TimeDim-a.TimeDim);
+  return {value: rows[0].NumericValue, date: String(rows[0].TimeDim)};
+}
+
+async function whoSeries(iso3, code, fromYear, toYear){
+  const rows = await whoRows(iso3, code);
+  const map = new Map();
+  rows.forEach(r=>{
+    if(r.TimeDim>=fromYear && r.TimeDim<=toYear && !map.has(r.TimeDim)) map.set(r.TimeDim, r.NumericValue);
+  });
+  return Array.from(map.entries()).map(([year,value])=>({year,value})).sort((a,b)=>a.year-b.year);
+}
+
+/* --- Unified dispatch: World Bank or WHO, by indicator.source --- */
+async function getLatest(iso3, ind){
+  return ind.source==="who" ? whoLatest(iso3, ind.code) : wbLatest(iso3, ind.code);
+}
+async function getSeries(iso3, ind, fromYear, toYear){
+  return ind.source==="who" ? whoSeries(iso3, ind.code, fromYear, toYear) : wbSeries(iso3, ind.code, fromYear, toYear);
+}
+
+/* ---------------- Rail rendering ---------------- */
+function renderContinentList(){
+  const el = document.getElementById("continentList");
+  el.innerHTML = "";
+  Object.keys(CONTINENTS).forEach(c=>{
+    const btn = document.createElement("button");
+    btn.className = "continent-btn"+(c===state.continent?" active":"");
+    btn.textContent = c;
+    btn.onclick = ()=>{
+      state.continent = c;
+      const first = CONTINENTS[c][0][0];
+      state.focus = first;
+      state.compare = new Set(CONTINENTS[c].slice(0,4).map(x=>x[0]));
+      renderContinentList();
+      renderCountryList();
+      refreshAll();
+    };
+    el.appendChild(btn);
+  });
+}
+
+function renderCountryList(){
+  const el = document.getElementById("countryList");
+  el.innerHTML = "";
+  CONTINENTS[state.continent].forEach(([iso,name])=>{
+    const row = document.createElement("div");
+    row.className = "country-item"+(iso===state.focus?" focus-country":"");
+    row.innerHTML = `<input type="checkbox" ${state.compare.has(iso)?"checked":""}/> <span style="cursor:pointer" data-iso="${iso}">${name}</span>`;
+    const checkbox = row.querySelector("input");
+    checkbox.onchange = ()=>{
+      if(checkbox.checked) state.compare.add(iso); else state.compare.delete(iso);
+      if(state.compare.size===0){ state.compare.add(iso); checkbox.checked=true; }
+      renderTab();
+    };
+    row.querySelector("span").onclick = ()=>{
+      state.focus = iso;
+      state.compare.add(iso);
+      renderCountryList();
+      refreshAll();
+    };
+    el.appendChild(row);
+  });
+}
+
+/* ---------------- KPI strip ---------------- */
+async function renderKPIs(){
+  const grid = document.getElementById("kpiGrid");
+  grid.innerHTML = `<div class="loading">Fetching latest indicators for ${nameOf(state.focus)}…</div>`;
+  document.getElementById("focusHeading").textContent = `Executive Command Center — ${nameOf(state.focus)}`;
+
+  const kpiKeys = Object.keys(INDICATORS).filter(k=>INDICATORS[k].kpi);
+  const results = await Promise.all(kpiKeys.map(k=>getLatest(state.focus, INDICATORS[k])));
+
+  grid.innerHTML = "";
+  kpiKeys.forEach((k,i)=>{
+    const ind = INDICATORS[k];
+    const res = results[i];
+    const div = document.createElement("div");
+    div.className = "kpi";
+    if(res && res.value!==null){
+      div.innerHTML = `<div class="label">${ind.label}</div><div class="value">${ind.fmt(res.value)}</div><div class="delta flat">as of ${res.date}</div>`;
+    }else{
+      div.innerHTML = `<div class="label">${ind.label}</div><div class="value">N/A</div><div class="delta flat">no recent data</div>`;
+    }
+    grid.appendChild(div);
+  });
+  updateTicker(kpiKeys, results);
+  setStatus(true);
+}
+
+function setWhoStatus(){
+  const el = document.getElementById("whoStatus");
+  el.className = "status "+(whoOK?"ok":"err");
+  el.textContent = whoOK ? "● WHO GHO API" : "● WHO GHO API — unreachable";
+}
+
+function updateTicker(keys, results){
+  const el = document.getElementById("ticker");
+  const parts = keys.map((k,i)=>{
+    const ind = INDICATORS[k];
+    const r = results[i];
+    if(!r || r.value===null) return `<span>${ind.label}: N/A</span>`;
+    return `<span>${nameOf(state.focus)} ${ind.label}: <b>${ind.fmt(r.value)}</b> (${r.date})</span>`;
+  });
+  el.innerHTML = parts.join("");
+}
+
+function setStatus(ok){
+  const el = document.getElementById("apiStatus");
+  el.className = "status "+(ok?"ok":"err");
+  el.textContent = ok ? "● World Bank API — live" : "● World Bank API — unreachable";
+}
+
+function nameOf(iso){
+  for(const list of Object.values(CONTINENTS)){
+    const f = list.find(x=>x[0]===iso);
+    if(f) return f[1];
+  }
+  return iso;
+}
+
+/* ---------------- Tabs / charts ---------------- */
+let lineChart, barChart;
+
+document.getElementById("tabs").addEventListener("click", e=>{
+  if(!e.target.classList.contains("tab-btn")) return;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  e.target.classList.add("active");
+  state.activeTab = e.target.dataset.tab;
+  renderTab();
+});
+
+function tabKeys(){
+  if(state.activeTab==="economic") return ECON_KEYS;
+  if(state.activeTab==="human") return HUMAN_KEYS;
+  if(state.activeTab==="health") return HEALTH_KEYS;
+  if(state.activeTab==="governance") return GOV_KEYS;
+  return ENV_KEYS;
+}
+
+async function renderTab(){
+  const content = document.getElementById("tabContent");
+  const keys = tabKeys();
+  const primaryKey = keys[0];
+  const primary = INDICATORS[primaryKey];
+
+  content.innerHTML = `
+    <div class="panel-grid">
+      <div class="card">
+        <h3>${primary.label} — trend (2005–2024)</h3>
+        <div class="sub">Compared across selected countries · unit: ${primary.unit}</div>
+        <canvas id="lineCanvas" height="230"></canvas>
+      </div>
+      <div class="card">
+        <h3>${primary.label} — latest ranking</h3>
+        <div class="sub">Most recent available value per country</div>
+        <div class="rank-list" id="rankList"><div class="loading" style="height:120px">Loading…</div></div>
+      </div>
+    </div>
+    <div class="panel-grid" style="margin-top:18px">
+      ${keys.slice(1).map(k=>`
+        <div class="card">
+          <h3>${INDICATORS[k].label}</h3>
+          <div class="sub">Latest value by country · unit: ${INDICATORS[k].unit}</div>
+          <div class="rank-list" id="rank-${k}"><div class="loading" style="height:100px">Loading…</div></div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  const isos = Array.from(state.compare);
+  const colors = ["#F0A857","#4FB3BF","#5FBF8F","#E2665D","#9B8CF2","#E7ECF5"];
+
+  document.getElementById("sourceNote").textContent =
+    primary.source==="who" ? "● Live source: WHO Global Health Observatory (ghoapi.azureedge.net)"
+                            : "● Live source: World Bank Open Data (api.worldbank.org)";
+
+  // Line chart: primary indicator over time, all compared countries
+  const seriesData = await Promise.all(isos.map(iso=>getSeries(iso, primary, 2005, 2024)));
+  const years = Array.from(new Set(seriesData.flat().map(d=>d.year))).sort((a,b)=>a-b);
+  const datasets = isos.map((iso,i)=>{
+    const map = Object.fromEntries(seriesData[i].map(d=>[d.year,d.value]));
+    return {
+      label: nameOf(iso),
+      data: years.map(y=>map[y] ?? null),
+      borderColor: colors[i%colors.length],
+      backgroundColor: colors[i%colors.length]+"22",
+      tension:0.3, spanGaps:true, pointRadius:0, borderWidth:2,
+    };
+  });
+
+  if(lineChart) lineChart.destroy();
+  const ctx = document.getElementById("lineCanvas").getContext("2d");
+  lineChart = new Chart(ctx, {
+    type:"line",
+    data:{labels:years, datasets},
+    options:{
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:"#7E8CA6", font:{family:"IBM Plex Mono", size:10} } } },
+      scales:{
+        x:{ ticks:{color:"#7E8CA6", font:{size:10}}, grid:{color:"#1E2A42"} },
+        y:{ ticks:{color:"#7E8CA6", font:{size:10}}, grid:{color:"#1E2A42"} },
+      }
+    }
+  });
+
+  // Ranking bars for the primary indicator
+  renderRankBars("rankList", isos, primary);
+  // Ranking bars for the secondary indicators in this tab
+  for(const k of keys.slice(1)){
+    renderRankBars("rank-"+k, isos, INDICATORS[k]);
+  }
+}
+
+async function renderRankBars(elId, isos, ind){
+  const el = document.getElementById(elId);
+  const results = await Promise.all(isos.map(iso=>getLatest(iso, ind)));
+  const rows = isos.map((iso,i)=>({iso, val: results[i]?.value ?? null, date: results[i]?.date ?? "—"}))
+                    .filter(r=>r.val!==null)
+                    .sort((a,b)=>b.val-a.val);
+  if(rows.length===0){ el.innerHTML = `<div style="color:var(--muted); font-size:12px;">No recent data for selected countries.</div>`; return; }
+  const max = Math.max(...rows.map(r=>Math.abs(r.val)));
+  el.innerHTML = rows.map(r=>`
+    <div class="rank-row">
+      <div class="country">${nameOf(r.iso)}</div>
+      <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${max?Math.abs(r.val)/max*100:0}%"></div></div>
+      <div class="rank-val">${ind.fmt(r.val)}</div>
+    </div>
+  `).join("");
+}
+
+/* ---------------- Clock ---------------- */
+function tickClock(){
+  document.getElementById("clock").textContent = new Date().toUTCString().split(" ")[4]+" UTC";
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ---------------- Boot ---------------- */
+async function refreshAll(){
+  try{
+    await renderKPIs();
+    await renderTab();
+    setWhoStatus();
+  }catch(e){
+    setStatus(false);
+    console.error(e);
+  }
+}
+
+renderContinentList();
+renderCountryList();
+refreshAll();
+</script>
+</body>
+</html>
