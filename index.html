@@ -32,23 +32,6 @@
     --body:'Inter', -apple-system, sans-serif;
   }
 
-  /* ---- Theme: McKinsey / Consulting Deck ---- */
-  html[data-theme="mckinsey"]{
-    --ink:#F7F8FA;
-    --panel:#FFFFFF;
-    --panel-2:#FFFFFF;
-    --border:#E1E5EA;
-    --text:#1A2233;
-    --muted:#63697A;
-    --amber:#8A6D3B;
-    --cyan:#1F2A56;
-    --flag:#3B4A8C;
-    --pos:#2F7D5B;
-    --neg:#A13A2E;
-    --radius:4px;
-    --radius-lg:6px;
-  }
-
   /* ---- Theme: Inscend Brand-Aligned ---- */
   html[data-theme="inscend"]{
     --ink:#F5FAFB;
@@ -195,6 +178,87 @@
     border:1px solid rgba(183,134,42,0.4); padding:1px 4px; border-radius:3px;
   }
   .rail-note{font-size:11px; color:var(--muted); line-height:1.5; margin-top:18px; padding-top:14px; border-top:1px solid var(--border);}
+
+  /* ---- Rail toggle (mobile only) ---- */
+  .rail-toggle{
+    display:none; width:100%; text-align:left; align-items:center; justify-content:space-between;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:10px 14px; font-family:var(--body); font-weight:600; font-size:13px; color:var(--text);
+    cursor:pointer;
+  }
+  .rail-content{ display:block; }
+
+  /* ---- Insight bar: clickable discovery chips ---- */
+  .insight-bar{
+    display:flex; gap:8px; overflow-x:auto; padding:2px 2px 8px; margin-bottom:24px;
+    scrollbar-width:thin;
+  }
+  .insight-chip{
+    font-family:var(--body); font-size:12px; font-weight:500; color:var(--cyan);
+    background:var(--panel); border:1px solid var(--border); border-radius:999px;
+    padding:8px 15px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:all .15s;
+  }
+  .insight-chip:hover{ background:var(--cyan); color:#fff; border-color:var(--cyan); transform:translateY(-1px); }
+
+  /* ---- Theme: Midnight Intelligence (dark) ---- */
+  html[data-theme="midnight"]{
+    --ink:#0B111C;
+    --panel:#131B29;
+    --panel-2:#0F1622;
+    --border:#232E40;
+    --text:#E7ECF5;
+    --muted:#8393A8;
+    --amber:#E0A857;
+    --cyan:#3FA9E8;
+    --flag:#3FA9E8;
+    --pos:#4FBF8F;
+    --neg:#E2665D;
+    --radius:9px;
+    --radius-lg:13px;
+  }
+  html[data-theme="midnight"] body{ background:var(--ink); }
+  html[data-theme="midnight"] .country-search,
+  html[data-theme="midnight"] .ai-panel,
+  html[data-theme="midnight"] .ai-input-row,
+  html[data-theme="midnight"] .ai-input-row input,
+  html[data-theme="midnight"] .ai-msg.bot,
+  html[data-theme="midnight"] .logo-chip{
+    background:var(--panel) !important; color:var(--text);
+  }
+  html[data-theme="midnight"] .kpi::before{ opacity:1; }
+  html[data-theme="midnight"] .mastrule.thick{ background:var(--cyan); box-shadow:0 0 12px rgba(63,169,232,0.4); }
+
+  /* ================= MOBILE OPTIMIZATION ================= */
+  @media (max-width:880px){
+    .rail-toggle{ display:flex; margin-bottom:10px; }
+    .rail-content{ display:none; padding-top:14px; }
+    .rail-content.open{ display:block; }
+    .rail{ padding:14px 16px; }
+  }
+  @media (max-width:700px){
+    .ticker-wrap{ display:none; }
+    .status{ display:none; }
+    .topbar-inner{ gap:10px; padding:10px 14px; }
+    .brand-title{ font-size:15px; }
+    .theme-btn span{ display:none; }
+    .theme-btn{ padding:6px 9px; }
+  }
+  @media (max-width:600px){
+    .main{ padding:16px 14px 30px; }
+    .kpi .value{ font-size:18px; }
+    .kpi{ padding:11px 12px; }
+    .tabs{ gap:5px; }
+    .tab-btn{ font-size:12px; padding:7px 11px; }
+    .card{ padding:14px 15px; }
+    .panel-grid{ gap:12px; }
+    .rank-row .country{ width:64px; font-size:11.5px; }
+    .ai-panel{ width:calc(100vw - 20px); right:10px; bottom:10px; height:70vh; }
+    .ai-fab{ right:14px; bottom:14px; padding:10px 14px; font-size:12px; }
+    .insight-chip{ font-size:11px; padding:7px 12px; }
+  }
+  @media (max-width:420px){
+    .kpi-grid{ grid-template-columns:repeat(2,1fr); }
+  }
 
   /* ===== Main ===== */
   .main{padding:22px 26px 40px;}
@@ -372,15 +436,18 @@
 
 <div class="layout">
   <div class="rail">
-    <h4>Continent</h4>
-    <div class="continent-list" id="continentList"></div>
+    <button class="rail-toggle" id="railToggle">☰ Continents &amp; Countries <span id="railToggleIcon">▾</span></button>
+    <div class="rail-content" id="railContent">
+      <h4>Continent</h4>
+      <div class="continent-list" id="continentList"></div>
 
-    <h4>Countries <span style="opacity:.6">(compare)</span></h4>
-    <input type="text" id="countrySearch" class="country-search" placeholder="Filter countries…">
-    <div class="country-list" id="countryList"></div>
+      <h4>Countries <span style="opacity:.6">(compare)</span></h4>
+      <input type="text" id="countrySearch" class="country-search" placeholder="Filter countries…">
+      <div class="country-list" id="countryList"></div>
 
-    <div class="rail-note">
-      Focus country drives the KPI strip. Checked countries drive the comparison charts. Click any ranking bar to make that country the focus. Data: World Bank Open Data — 20,000+ indicators, 217 economies, no key required.
+      <div class="rail-note">
+        Focus country drives the KPI strip. Checked countries drive the comparison charts. Click any ranking bar to make that country the focus. Data: World Bank Open Data — 20,000+ indicators, 217 economies, no key required.
+      </div>
     </div>
   </div>
 
@@ -389,6 +456,8 @@
     <div class="kpi-grid" id="kpiGrid">
       <div class="loading">Fetching latest indicators…</div>
     </div>
+
+    <div class="insight-bar" id="insightBar" style="display:none;"></div>
 
     <div class="card" id="briefingCard" style="margin-bottom:28px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
@@ -461,12 +530,17 @@ const CONTINENTS = {
     ["CHN","China"], ["IND","India"], ["JPN","Japan"], ["VNM","Vietnam"],
     ["IDN","Indonesia"], ["KOR","South Korea"], ["SAU","Saudi Arabia"], ["PAK","Pakistan"]
   ],
-  Americas: [
-    ["USA","United States"], ["BRA","Brazil"], ["MEX","Mexico"], ["CAN","Canada"],
-    ["ARG","Argentina"], ["COL","Colombia"], ["CHL","Chile"], ["PER","Peru"]
+  "North America": [
+    ["USA","United States"], ["CAN","Canada"], ["MEX","Mexico"], ["GTM","Guatemala"],
+    ["CUB","Cuba"], ["DOM","Dominican Republic"], ["CRI","Costa Rica"], ["PAN","Panama"]
+  ],
+  "South America": [
+    ["BRA","Brazil"], ["ARG","Argentina"], ["COL","Colombia"], ["CHL","Chile"],
+    ["PER","Peru"], ["VEN","Venezuela"], ["ECU","Ecuador"], ["BOL","Bolivia"]
   ],
   Oceania: [
-    ["AUS","Australia"], ["NZL","New Zealand"], ["PNG","Papua New Guinea"], ["FJI","Fiji"]
+    ["AUS","Australia"], ["NZL","New Zealand"], ["PNG","Papua New Guinea"], ["FJI","Fiji"],
+    ["WSM","Samoa"], ["SLB","Solomon Islands"], ["VUT","Vanuatu"], ["TON","Tonga"]
   ]
 };
 
@@ -679,6 +753,11 @@ function renderBriefing(){
 }
 
 /* ---------------- KPI strip ---------------- */
+const KPI_TO_TAB = {
+  gdpPerCapita:"economic", gdpGrowth:"economic", inflation:"economic", unemployment:"economic",
+  population:"human", lifeExp:"human",
+};
+
 async function renderKPIs(){
   const grid = document.getElementById("kpiGrid");
   grid.innerHTML = `<div class="loading">Fetching latest indicators for ${nameOf(state.focus)}…</div>`;
@@ -693,11 +772,17 @@ async function renderKPIs(){
     const res = results[i];
     const div = document.createElement("div");
     div.className = "kpi";
+    div.style.cursor = "pointer";
+    div.title = `View ${ind.label} in ${KPI_TO_TAB[k]==="economic"?"Economic Intelligence":"Human Development"}`;
     if(res && res.value!==null){
       div.innerHTML = `<div class="label">${ind.label}</div><div class="value">${ind.fmt(res.value)}</div><div class="delta flat">as of ${res.date}</div>`;
     }else{
       div.innerHTML = `<div class="label">${ind.label}</div><div class="value">N/A</div><div class="delta flat">no recent data</div>`;
     }
+    div.onclick = ()=>{
+      switchTab(KPI_TO_TAB[k]);
+      document.getElementById("tabContent").scrollIntoView({behavior:"smooth", block:"start"});
+    };
     grid.appendChild(div);
   });
   updateTicker(kpiKeys, results);
@@ -739,12 +824,15 @@ function nameOf(iso){
 /* ---------------- Tabs / charts ---------------- */
 let lineChart, barChart;
 
+function switchTab(tabId){
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===tabId));
+  state.activeTab = tabId;
+  renderTab();
+}
+
 document.getElementById("tabs").addEventListener("click", e=>{
   if(!e.target.classList.contains("tab-btn")) return;
-  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-  e.target.classList.add("active");
-  state.activeTab = e.target.dataset.tab;
-  renderTab();
+  switchTab(e.target.dataset.tab);
 });
 
 function tabKeys(){
@@ -792,6 +880,9 @@ async function renderTab(){
 
   const isos = Array.from(state.compare);
   const colors = ["#0067A0","#2E7D6B","#B7862A","#8C4A3D","#6B4C7A","#3B4B57"];
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const mutedColor = cssVar("--muted") || "#6B625B";
+  const gridColor = cssVar("--border") || "#E4D6C8";
 
   document.getElementById("sourceNote").textContent =
     primary.source==="who" ? "● Live source: WHO Global Health Observatory (ghoapi.azureedge.net)"
@@ -818,10 +909,16 @@ async function renderTab(){
     data:{labels:years, datasets},
     options:{
       responsive:true,
-      plugins:{ legend:{ labels:{ color:"#6B625B", font:{family:"IBM Plex Mono", size:10} } } },
+      onClick:(evt, elements)=>{
+        if(elements.length){
+          const iso = isos[elements[0].datasetIndex];
+          if(iso){ state.focus = iso; renderCountryList(); refreshAll(); }
+        }
+      },
+      plugins:{ legend:{ labels:{ color:mutedColor, font:{family:"IBM Plex Mono", size:10} } } },
       scales:{
-        x:{ ticks:{color:"#6B625B", font:{size:10}}, grid:{color:"#E4D6C8"} },
-        y:{ ticks:{color:"#6B625B", font:{size:10}}, grid:{color:"#E4D6C8"} },
+        x:{ ticks:{color:mutedColor, font:{size:10}}, grid:{color:gridColor} },
+        y:{ ticks:{color:mutedColor, font:{size:10}}, grid:{color:gridColor} },
       }
     }
   });
@@ -839,15 +936,65 @@ async function renderTab(){
     a.click();
   };
 
-  // Ranking bars for the primary indicator
-  renderRankBars("rankList", isos, primary);
+  // Ranking bars for the primary indicator — linked to the chart (hover to highlight, click to focus)
+  await renderRankBars("rankList", isos, primary, true);
   // Ranking bars for the secondary indicators in this tab
   for(const k of keys.slice(1)){
-    renderRankBars("rank-"+k, isos, INDICATORS[k]);
+    await renderRankBars("rank-"+k, isos, INDICATORS[k], false);
   }
+  renderInsightBar();
 }
 
-async function renderRankBars(elId, isos, ind){
+/* ---------------- Insights: clickable discovery chips ---------------- */
+let insights = [];
+const TAB_META = {
+  economic:{label:"Economic Intelligence", icon:"💰"},
+  human:{label:"Human Development", icon:"🎓"},
+  health:{label:"Health Intelligence", icon:"🏥"},
+  environment:{label:"Environment & Digital", icon:"🌐"},
+  governance:{label:"Governance & SDGs", icon:"⚖️"},
+};
+
+function generateInsights(primaryInd, rows){
+  insights = [];
+  if(rows.length >= 2){
+    const leader = rows[0];
+    const laggard = rows[rows.length-1];
+    if(leader.iso !== state.focus){
+      insights.push({icon:"🏆", text:`${nameOf(leader.iso)} leads on ${primaryInd.label} (${primaryInd.fmt(leader.val)}) — click to focus`,
+        action:()=>{ state.focus = leader.iso; renderCountryList(); refreshAll(); }});
+    }
+    const myIdx = rows.findIndex(r=>r.iso===state.focus);
+    if(myIdx > 0){
+      insights.push({icon:"📍", text:`${nameOf(state.focus)} ranks ${myIdx+1} of ${rows.length} on ${primaryInd.label} in your selection`,
+        action:()=>{ document.getElementById("lineCanvas").scrollIntoView({behavior:"smooth", block:"center"}); }});
+    }
+    if(leader.iso !== laggard.iso && rows.length >= 3){
+      const gap = leader.val && laggard.val ? Math.abs(leader.val / (laggard.val || 1)).toFixed(1) : null;
+      if(gap && gap !== "1.0" && isFinite(gap)){
+        insights.push({icon:"📊", text:`${nameOf(leader.iso)} is ${gap}× ${nameOf(laggard.iso)} on ${primaryInd.label} — click to compare`,
+          action:()=>{ state.compare.add(leader.iso); state.compare.add(laggard.iso); renderCountryList(); refreshAll(); }});
+      }
+    }
+  }
+  // Nudge toward an unexplored module
+  const otherTabs = Object.keys(TAB_META).filter(t=>t!==state.activeTab);
+  const nudge = otherTabs[Math.floor(Math.random()*otherTabs.length)];
+  insights.push({icon:TAB_META[nudge].icon, text:`See how ${nameOf(state.focus)} performs on ${TAB_META[nudge].label}`,
+    action:()=>switchTab(nudge)});
+}
+
+function renderInsightBar(){
+  const el = document.getElementById("insightBar");
+  if(!insights.length){ el.style.display = "none"; return; }
+  el.style.display = "flex";
+  el.innerHTML = insights.map((ins,i)=>`<button class="insight-chip" data-i="${i}">${ins.icon} ${ins.text}</button>`).join("");
+  el.querySelectorAll(".insight-chip").forEach(btn=>{
+    btn.onclick = ()=> insights[+btn.dataset.i].action();
+  });
+}
+
+async function renderRankBars(elId, isos, ind, linkToChart){
   const el = document.getElementById(elId);
   const results = await Promise.all(isos.map(iso=>getLatest(iso, ind)));
   const rows = isos.map((iso,i)=>({iso, val: results[i]?.value ?? null, date: results[i]?.date ?? "—"}))
@@ -868,7 +1015,27 @@ async function renderRankBars(elId, isos, ind){
       renderCountryList();
       refreshAll();
     };
+    if(linkToChart && lineChart){
+      row.addEventListener("mouseenter", ()=>{
+        const idx = isos.indexOf(row.dataset.iso);
+        lineChart.data.datasets.forEach((ds,i)=>{
+          ds.borderWidth = i===idx ? 4 : 1;
+          ds.borderColor = i===idx ? ds.borderColor : ds.borderColor + "55";
+        });
+        lineChart.update("none");
+      });
+      row.addEventListener("mouseleave", ()=>{
+        lineChart.data.datasets.forEach((ds,i)=>{
+          ds.borderWidth = 2;
+          ds.borderColor = ds.borderColor.replace(/55$/, "");
+        });
+        lineChart.update("none");
+      });
+    }
   });
+  if(linkToChart){
+    generateInsights(ind, rows);
+  }
 }
 
 /* ---------------- Clock ---------------- */
@@ -1077,7 +1244,7 @@ async function refreshAll(){
 /* ---------------- Theme switcher (single button, cycles 3 themes) ---------------- */
 const THEMES = [
   {id:"un", label:"UN Data Portal"},
-  {id:"mckinsey", label:"Consulting Deck"},
+  {id:"midnight", label:"Midnight Intelligence"},
   {id:"inscend", label:"Inscend Brand"},
 ];
 
@@ -1102,6 +1269,14 @@ function initTheme(){
 }
 
 initTheme();
+
+document.getElementById("railToggle").addEventListener("click", ()=>{
+  const content = document.getElementById("railContent");
+  const icon = document.getElementById("railToggleIcon");
+  content.classList.toggle("open");
+  icon.textContent = content.classList.contains("open") ? "▴" : "▾";
+});
+
 renderContinentList();
 renderCountryList();
 loadBriefings().then(refreshAll);

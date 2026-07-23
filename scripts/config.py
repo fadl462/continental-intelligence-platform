@@ -12,11 +12,18 @@ COUNTRIES = {
     "CHN": ("China", "Asia"), "IND": ("India", "Asia"), "JPN": ("Japan", "Asia"),
     "VNM": ("Vietnam", "Asia"), "IDN": ("Indonesia", "Asia"), "KOR": ("South Korea", "Asia"),
     "SAU": ("Saudi Arabia", "Asia"), "PAK": ("Pakistan", "Asia"),
-    "USA": ("United States", "Americas"), "BRA": ("Brazil", "Americas"), "MEX": ("Mexico", "Americas"),
-    "CAN": ("Canada", "Americas"), "ARG": ("Argentina", "Americas"), "COL": ("Colombia", "Americas"),
-    "CHL": ("Chile", "Americas"), "PER": ("Peru", "Americas"),
+    "USA": ("United States", "North America"), "CAN": ("Canada", "North America"),
+    "MEX": ("Mexico", "North America"), "GTM": ("Guatemala", "North America"),
+    "CUB": ("Cuba", "North America"), "DOM": ("Dominican Republic", "North America"),
+    "CRI": ("Costa Rica", "North America"), "PAN": ("Panama", "North America"),
+    "BRA": ("Brazil", "South America"), "ARG": ("Argentina", "South America"),
+    "COL": ("Colombia", "South America"), "CHL": ("Chile", "South America"),
+    "PER": ("Peru", "South America"), "VEN": ("Venezuela", "South America"),
+    "ECU": ("Ecuador", "South America"), "BOL": ("Bolivia", "South America"),
     "AUS": ("Australia", "Oceania"), "NZL": ("New Zealand", "Oceania"),
     "PNG": ("Papua New Guinea", "Oceania"), "FJI": ("Fiji", "Oceania"),
+    "WSM": ("Samoa", "Oceania"), "SLB": ("Solomon Islands", "Oceania"),
+    "VUT": ("Vanuatu", "Oceania"), "TON": ("Tonga", "Oceania"),
 }
 
 # id: (source, source_code, label, unit) — the indicators fed into each briefing prompt
