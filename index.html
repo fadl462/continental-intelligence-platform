@@ -5,25 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Continental Intelligence Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
-    /* FT/Economist editorial palette. Var names kept from the prior build
-       to minimize churn — --amber now holds the primary accent (Economist
-       red), --cyan holds the secondary accent (deep navy). */
-    --ink:#F7F4EC;
+    /* UN Data Portal palette. --cyan = UN blue (primary interactive, buttons/
+       tabs/focus), --flag = brighter flag blue (decorative accents only —
+       dot pulse, thin rule), --amber = olive-gold nod to the UN emblem's
+       laurel branches (used sparingly: KPI border, focus badge). Each module
+       tab additionally carries its own official SDG color when active. */
+    --ink:#FFFFFF;
     --panel:#FFFFFF;
     --panel-2:#FFFFFF;
-    --border:#DDD5C4;
-    --text:#1E2A38;
-    --muted:#746C5E;
-    --amber:#B7862A;
-    --cyan:#14456B;
+    --border:#DCE3EA;
+    --text:#1C2B39;
+    --muted:#5B6B7A;
+    --amber:#8C7A3A;
+    --cyan:#0067A0;
+    --flag:#009EDB;
     --pos:#2F7D5B;
     --neg:#A13A2E;
     --mono:'IBM Plex Mono', monospace;
-    --disp:'Source Serif 4', Georgia, serif;
+    --disp:'Inter', -apple-system, sans-serif;
     --body:'Inter', -apple-system, sans-serif;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -42,8 +45,8 @@
     background:var(--panel-2);
     overflow:hidden;
   }
-  .mastrule{ height:2px; background:var(--amber); }
-  .mastrule.thick{ height:5px; background:var(--cyan); }
+  .mastrule{ height:1px; background:var(--border); }
+  .mastrule.thick{ height:3px; background:var(--flag); }
   .sweep{ display:none; }
   @keyframes sweep{
     0%{left:-30%;}
@@ -73,8 +76,8 @@
   }
   .brand-sub:hover{ color:var(--amber); text-decoration:underline; }
   .brand .dot{
-    width:8px; height:8px; border-radius:50%; background:var(--amber);
-    box-shadow:0 0 0 3px rgba(183,134,42,0.18);
+    width:8px; height:8px; border-radius:50%; background:var(--flag);
+    box-shadow:0 0 0 3px rgba(0,158,219,0.18);
     animation:pulse 1.8s ease-in-out infinite;
   }
   .country-search{
@@ -195,6 +198,18 @@
   .tab-btn.active{
     color:#FFFFFF; background:var(--cyan); border-color:var(--cyan);
   }
+  /* SDG module colors — official UN Sustainable Development Goal palette,
+     one per module, so each tab reads as its own tagged dataset. */
+  .tab-btn[data-tab="economic"].active{ background:#A21942; border-color:#A21942; }
+  .tab-btn[data-tab="human"].active{ background:#C5192D; border-color:#C5192D; }
+  .tab-btn[data-tab="health"].active{ background:#4C9F38; border-color:#4C9F38; }
+  .tab-btn[data-tab="environment"].active{ background:#FDB713; border-color:#FDB713; color:#1C2B39; }
+  .tab-btn[data-tab="governance"].active{ background:#00689D; border-color:#00689D; }
+  .tab-btn[data-tab="economic"]:hover{ color:#A21942; }
+  .tab-btn[data-tab="human"]:hover{ color:#C5192D; }
+  .tab-btn[data-tab="health"]:hover{ color:#3F7E44; }
+  .tab-btn[data-tab="environment"]:hover{ color:#B8860B; }
+  .tab-btn[data-tab="governance"]:hover{ color:#00689D; }
 
   .panel-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:18px;}
   @media (max-width:980px){ .panel-grid{grid-template-columns:1fr;} }
@@ -727,7 +742,7 @@ async function renderTab(){
   `;
 
   const isos = Array.from(state.compare);
-  const colors = ["#14456B","#2E7D6B","#B7862A","#8C4A3D","#6B4C7A","#55606D"];
+  const colors = ["#0067A0","#2E7D6B","#B7862A","#8C4A3D","#6B4C7A","#3B4B57"];
 
   document.getElementById("sourceNote").textContent =
     primary.source==="who" ? "● Live source: WHO Global Health Observatory (ghoapi.azureedge.net)"
